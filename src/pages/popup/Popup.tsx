@@ -68,6 +68,13 @@ export default function Popup(): JSX.Element {
     return () => clearInterval(timer);
   }, []);
 
+  // useEffect(()=>{
+  //   chrome.runtime.onMessage.addListener(function (message){
+  //     if(message.action === 'startUp'){
+  //       fetchUserEvents();
+  //     }
+  //   })
+  // },[])
   function calculateCountdown(startDate: Date) {
     const now = new Date();
     const diff = startDate.getTime() - now.getTime();

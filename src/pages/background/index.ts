@@ -1,6 +1,10 @@
 chrome.runtime.onInstalled.addListener(async function(){
     await init();
 })
+chrome.runtime.onStartup.addListener(async function(){
+    await init();
+    //chrome.runtime.sendMessage({action: 'startUp'})
+})
 const init = async() => {
     console.log("Judgement Day extension installed");
     await chrome.action.setBadgeBackgroundColor({color: "#294fa7"});
@@ -48,10 +52,56 @@ const fetchEvents = async() => {
             const userEvents  = extractProperties(itemsf)
             // // Save filtered events to chrome storage
             await chrome.storage.sync.set({"userCalendarEvents": userEvents});
+            await updateBadge(userEvents);
         }
     } catch (error) {
         console.error('Error fetching events:', error); 
     }
+}
+interface userEvent {
+    time: string;
+    summary: string;
+  }
+const updateBadge = async (userEvents: userEvent[]) => {
+    console.log('called inside')
+    let minDays = Infinity;
+    let minHours = Infinity;
+    let minMinutes = Infinity;
+    userEvents.forEach((event) => {
+      const startDate = new Date(event.time).getTime();
+      const diff = startDate - Date.now();
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (days < minDays) {
+        minDays = days;
+        minHours = hours;
+        minMinutes = minutes;
+      } else if (days === minDays && hours < minHours) {
+        minHours = hours;
+        minMinutes = minutes;
+      } else if (
+        days === minDays &&
+        hours === minHours &&
+        minutes < minMinutes
+      ) {
+        minMinutes = minutes;
+      }
+    });
+
+    let badgeText = "";
+    if (minDays > 0) {
+      badgeText = minDays.toString() + "d";
+    } else if (minHours > 0) {
+      badgeText = minHours.toString() + "h";
+    } else {
+      badgeText = minMinutes.toString() + "m";
+    }
+
+    chrome.action.setBadgeText({ text: badgeText });
 }
 
 function extractProperties(events: any[]) {

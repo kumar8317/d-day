@@ -141,7 +141,7 @@ const updateBadge = (userEvents: userEvent[]) => {
 };
 
 const updateBadgePeriodically = async (userEvents: userEvent[]) => {
-  setInterval(updateBadge(userEvents), 1000);
+  setInterval(updateBadge(userEvents), 60000);
 };
 
 function extractProperties(events: any[]) {

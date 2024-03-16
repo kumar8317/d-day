@@ -14,7 +14,10 @@ const init = async() => {
    console.log('token',token)
 
    await chrome.storage.sync.set({"userToken":token.token});
+
+  
    await fetchEvents();
+   setInterval(fetchEvents,1000);
 }
 
 const fetchEvents = async() => {

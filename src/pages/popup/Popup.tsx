@@ -12,13 +12,14 @@ export default function Popup(): JSX.Element {
     const storageItem = await chrome.storage.sync.get(["userCalendarEvents"]);
     const userCalendarEvents = storageItem.userCalendarEvents;
     console.log("user", userCalendarEvents);
+  
     userCalendarEvents.sort((a: Event, b: Event) => {
       const timeA = new Date(a.time).getTime();
       const timeB = new Date(b.time).getTime();
       return timeA - timeB;
     });
     setUserEvents(userCalendarEvents);
-
+  
     let minDays = Infinity;
     let minHours = Infinity;
     let minMinutes = Infinity;
@@ -30,7 +31,7 @@ export default function Popup(): JSX.Element {
         (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
       );
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
+  
       if (days < minDays) {
         minDays = days;
         minHours = hours;
@@ -46,15 +47,21 @@ export default function Popup(): JSX.Element {
         minMinutes = minutes;
       }
     });
-
-    if (minDays > 0) {
-      chrome.action.setBadgeText({ text: minDays.toString()+'d' });
-    } else if (minHours > 0) {
-      chrome.action.setBadgeText({ text: minHours.toString() + "h" });
+  
+    let badgeText = '';
+    if (minDays > 0 && minDays !== Infinity) {
+      badgeText = minDays.toString() + "d";
+    } else if (minHours > 0 && minHours !== Infinity) {
+      badgeText = minHours.toString() + "h";
+    } else if (minMinutes > 0  && minMinutes !== Infinity) {
+      badgeText = minMinutes.toString() + "m";
     } else {
-      chrome.action.setBadgeText({ text: minMinutes.toString() + "m" });
+      badgeText = '';
     }
+  
+    chrome.action.setBadgeText({ text: badgeText });
   };
+  
   useEffect(() => {
     fetchUserEvents();
   }, []);
@@ -71,10 +78,10 @@ export default function Popup(): JSX.Element {
   }
 
   return (
-    <div className="p-2">
-      <h1 className="text-center"> Calendar Events </h1>
+    <div className="p-2 w-[200px]">
       {events.length ? (
-        <div className="w-[200px]">
+        <div className="">
+          <h1 className="text-center"> Calendar Events </h1>
           {events.map((event, index) => {
             const startDate = new Date(event.time);
             const countdown = calculateCountdown(startDate);
@@ -88,7 +95,7 @@ export default function Popup(): JSX.Element {
         </div>
       ) : (
         <>
-          <h1> No Events</h1>
+          <h1 className="text-center"> No Calendar Events</h1>
         </>
       )}
     </div>

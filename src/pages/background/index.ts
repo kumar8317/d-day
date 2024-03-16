@@ -1,4 +1,3 @@
-console.log('background script loaded');
 chrome.runtime.onInstalled.addListener(async function(){
     await init();
 })

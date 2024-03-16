@@ -3,17 +3,19 @@ interface userEvent {
   summary: string;
 }
 chrome.runtime.onInstalled.addListener(async function () {
+  await chrome.storage.sync.set({ userCalendarEvents: [] });
   await init();
 });
 chrome.runtime.onStartup.addListener(async function () {
   await init();
 });
 const init = async () => {
-  await chrome.storage.sync.set({ userCalendarEvents: [] });
+  
   await chrome.action.setBadgeBackgroundColor({ color: "#294fa7" });
   const token = await chrome.identity.getAuthToken({ interactive: true });
   await chrome.storage.sync.set({ userToken: token.token });
   const userEvents = await fetchEvents();
+  updateBadge(userEvents)()
   updateBadgePeriodically(userEvents);
 };
 
@@ -68,7 +70,7 @@ const fetchEvents = async (): Promise<userEvent[]> => {
         return eventTime >= Date.now();
       });
       await chrome.storage.sync.set({ userCalendarEvents: userCalendarEvents });
-      await updateBadge(userCalendarEvents);
+      updateBadge(userCalendarEvents)();
     }
 
     return userCalendarEvents;

@@ -11,7 +11,6 @@ export default function Popup(): JSX.Element {
   const fetchUserEvents = async () => {
     const storageItem = await chrome.storage.sync.get(["userCalendarEvents"]);
     const userCalendarEvents = storageItem.userCalendarEvents;
-    console.log("user", userCalendarEvents);
   
     userCalendarEvents.sort((a: Event, b: Event) => {
       const timeA = new Date(a.time).getTime();

@@ -9,6 +9,8 @@
   },
   "type": "module",
   "dependencies": {
+    "@types/gapi.calendar": "^3.0.11",
+    "googleapis": "^134.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "webextension-polyfill": "^0.10.0"

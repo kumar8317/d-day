@@ -7,17 +7,18 @@
     "type": "module"
   },
   "action": {
-    "default_popup": "src/pages/popup/index.html",
-    "default_icon": {
-      "32": "icon-32.png"
-    }
-  },
-  "icons": {
-    "128": "icon-128.png"
+    "default_popup": "src/pages/popup/index.html"
   },
   "permissions": [
-    "activeTab"
+    "storage",
+    "identity"
   ],
+  "oauth2": {
+    "client_id": "867471131289-7c10u1t66qj0tjleu55tv3arng5rl18i.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/calendar"
+    ]
+  } ,
   "web_accessible_resources": [
     {
       "resources": [

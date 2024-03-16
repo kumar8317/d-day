@@ -19,7 +19,7 @@ const isDev = process.env.__DEV__ === 'true';
 const extensionManifest = {
   ...manifest,
   ...(isDev ? devManifest : {} as ManifestV3Export),
-  name: isDev ? `DEV: ${ manifest.name }` : manifest.name,
+  name: manifest.name,
   version: pkg.version,
 };
 

@@ -63,7 +63,7 @@ export default function Popup(): JSX.Element {
   
   useEffect(() => {
     fetchUserEvents();
-  }, []);
+  }, [events]);
 
   // useEffect(()=>{
   //   chrome.runtime.onMessage.addListener(function (message){

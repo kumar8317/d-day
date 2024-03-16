@@ -67,7 +67,6 @@ const fetchEvents = async (): Promise<userEvent[]> => {
         const eventTime = new Date(event.time).getTime();
         return eventTime >= Date.now();
       });
-      console.log("calendea called");
       await chrome.storage.sync.set({ userCalendarEvents: userCalendarEvents });
       await updateBadge(userCalendarEvents);
     }
@@ -79,49 +78,70 @@ const fetchEvents = async (): Promise<userEvent[]> => {
   }
 };
 
-const updateBadge = async (userEvents: userEvent[]) => {
-  let minDays = Infinity;
-  let minHours = Infinity;
-  let minMinutes = Infinity;
-  if (userEvents.length) {
-    userEvents.forEach((event) => {
-      const startDate = new Date(event.time).getTime();
-      const diff = startDate - Date.now();
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(
-        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-      );
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+const updateBadge = (userEvents: userEvent[]) => {
+  return async () => {
+    let minDays = Infinity;
+    let minHours = Infinity;
+    let minMinutes = Infinity;
 
-      if (days < minDays) {
-        minDays = days;
-        minHours = hours;
-        minMinutes = minutes;
-      } else if (days === minDays && hours < minHours) {
-        minHours = hours;
-        minMinutes = minutes;
-      } else if (
-        days === minDays &&
-        hours === minHours &&
-        minutes < minMinutes
-      ) {
-        minMinutes = minutes;
+    if (userEvents.length) {
+      //remove this event
+      
+
+      userEvents.forEach((event) => {
+        const startDate = new Date(event.time).getTime();
+        const diff = startDate - Date.now();
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (days < minDays) {
+          minDays = days;
+          minHours = hours;
+          minMinutes = minutes;
+        } else if (days === minDays && hours < minHours) {
+          minHours = hours;
+          minMinutes = minutes;
+        } else if (
+          days === minDays &&
+          hours === minHours &&
+          minutes < minMinutes
+        ) {
+          minMinutes = minutes;
+        }
+      });
+    }
+    let badgeText = "";
+    if (minDays > 0) {
+      badgeText = minDays.toString() + "d";
+    } else if (minHours > 0) {
+      badgeText = minHours.toString() + "h";
+    } else {
+      badgeText = minMinutes.toString() + "m";
+    }
+    if (badgeText === "Infinityd") {
+      badgeText = "";
+    }
+
+    if(minDays <= 0 && minHours <= 0 && minMinutes <= 0){
+      const updatedEvents = userEvents.filter((event) => {
+        const eventTime = new Date(event.time).getTime();
+        return eventTime >= Date.now();
+      });
+      if (updatedEvents.length !== userEvents.length) {
+        await chrome.storage.sync.set({ userCalendarEvents: updatedEvents });
+        userEvents = updatedEvents;
       }
-    });
-  }
+    }
 
-  let badgeText = "";
-  if (minDays > 0) {
-    badgeText = minDays.toString() + "d";
-  } else if (minHours > 0) {
-    badgeText = minHours.toString() + "h";
-  } else {
-    badgeText = minMinutes.toString() + "m";
-  }
-  if (badgeText === "Infinityd") {
-    badgeText = "";
-  }
-  chrome.action.setBadgeText({ text: badgeText });
+    chrome.action.setBadgeText({ text: badgeText });
+  };
+};
+
+const updateBadgePeriodically = async (userEvents: userEvent[]) => {
+  setInterval(updateBadge(userEvents), 1000);
 };
 
 function extractProperties(events: any[]) {
@@ -132,11 +152,3 @@ function extractProperties(events: any[]) {
     };
   });
 }
-
-const updateBadgePeriodically = (userEvents: userEvent[]) => {
-  // Set up an interval to call updateBadge periodically
-  setInterval(async () => {
-    // Fetch user events and pass them to updateBadg
-    updateBadge(userEvents);
-  }, 1000); // Update badge every 60 seconds
-};

@@ -64,6 +64,8 @@ export default function Popup(): JSX.Element {
   
   useEffect(() => {
     fetchUserEvents();
+    const timer = setInterval(fetchUserEvents, 60000); // Update every minute
+    return () => clearInterval(timer);
   }, []);
 
   function calculateCountdown(startDate: Date) {
@@ -78,24 +80,24 @@ export default function Popup(): JSX.Element {
   }
 
   return (
-    <div className="p-2 w-[200px]">
+    <div className="p-2 w-[200px] bg-black">
       {events.length ? (
         <div className="">
-          <h1 className="text-center"> Calendar Events </h1>
+          <h1 className="text-center text-[#cc6633] text-xl"> Calendar Events </h1>
           {events.map((event, index) => {
             const startDate = new Date(event.time);
             const countdown = calculateCountdown(startDate);
             return (
               <div key={index} className="mb-2.5 p-[5px] rounded-[5px]">
                 <div className="text-[#3366cc]">{event.summary}</div>
-                <div className="text-[#cc6633]">{countdown}</div>
+                <div className="text-[#cc6633] text-lg">{countdown}</div>
               </div>
             );
           })}
         </div>
       ) : (
         <>
-          <h1 className="text-center"> No Calendar Events</h1>
+          <h1 className="text-center text-[#cc6633]"> No Calendar Events</h1>
         </>
       )}
     </div>

@@ -7,8 +7,9 @@ interface Event {
 
 export default function Popup(): JSX.Element {
   const [events, setUserEvents] = useState<Event[]>([]);
-
+  const [loading, setLoading] = useState(false);
   const fetchUserEvents = async () => {
+    
     const storageItem = await chrome.storage.sync.get(["userCalendarEvents"]);
     const userCalendarEvents = storageItem.userCalendarEvents;
   
@@ -18,7 +19,7 @@ export default function Popup(): JSX.Element {
       return timeA - timeB;
     });
     setUserEvents(userCalendarEvents);
-  
+    
     let minDays = Infinity;
     let minHours = Infinity;
     let minMinutes = Infinity;
@@ -59,6 +60,7 @@ export default function Popup(): JSX.Element {
     }
   
     chrome.action.setBadgeText({ text: badgeText });
+    
   };
   
   useEffect(() => {
@@ -83,8 +85,9 @@ export default function Popup(): JSX.Element {
     return `${days}d ${hours}h ${minutes}m`;
   }
   const handleRefresh = () => {
-    console.log('refresh1')
+    setLoading(true);
     chrome.runtime.sendMessage({ action: "fetchEvents" });
+    setLoading(false);
   };
   return (
     <div className="p-2 w-[200px] bg-bgPrimary">
@@ -111,7 +114,7 @@ export default function Popup(): JSX.Element {
           className="bg-persianOrange text-white px-3 py-1 rounded-md my-2 mx-auto block"
           onClick={handleRefresh}
         >
-          Refresh
+          {loading ? "Refreshing..." : "Refresh"}
         </button>
     </div>
   );

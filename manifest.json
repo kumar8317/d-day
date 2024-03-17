@@ -7,7 +7,8 @@
     "type": "module"
   },
   "action": {
-    "default_popup": "src/pages/popup/index.html"
+    "default_popup": "src/pages/popup/index.html",
+    "default_icon": "Icon.png"
   },
   "permissions": [
     "storage",
@@ -15,6 +16,9 @@
     "notifications",
     "gcm"
   ],
+  "icons": {
+    "128": "Icon.png"
+  },
   "oauth2": {
     "client_id": "867471131289-6b500uuacqdnb2ve5igu6tsqr2hd39e5.apps.googleusercontent.com",
     "scopes": [

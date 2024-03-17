@@ -5,6 +5,7 @@ interface userEvent {
 chrome.runtime.onInstalled.addListener(async function () {
   await chrome.storage.sync.set({ userCalendarEvents: [] });
   await init();
+  
 });
 chrome.runtime.onStartup.addListener(async function () {
   await init();
@@ -13,6 +14,8 @@ const init = async () => {
   
   await chrome.action.setBadgeBackgroundColor({ color: "#294fa7" });
   const token = await chrome.identity.getAuthToken({ interactive: true });
+  //await registerWebhook(token.token? token.token:'')
+  //await gcm(token.token? token.token:'');
   await chrome.storage.sync.set({ userToken: token.token });
   const userEvents = await fetchEvents();
   updateBadge(userEvents)()
@@ -47,6 +50,7 @@ const fetchEvents = async (): Promise<userEvent[]> => {
       const response = await fetch(fetchURL, queryParams);
 
       const data = await response.json();
+      console.log('orginal',data)
       const items = data?.items.filter(
         (item: { status: string; start: { dateTime: any } }) =>
           item.status !== "cancelled" && item.start && item.start.dateTime
@@ -57,14 +61,14 @@ const fetchEvents = async (): Promise<userEvent[]> => {
       );
 
       const newEvents = extractProperties(currentEvents);
-
-      const filteredNewEvents = newEvents.filter(
-        (newEvent) =>
-          !userCalendarEvents.some(
-            (existingEvent) => existingEvent.time === newEvent.time
-          )
-      );
-      userCalendarEvents = [...userCalendarEvents, ...filteredNewEvents];
+      console.log('newEvents',newEvents)
+      // const filteredNewEvents = newEvents.filter(
+      //   (newEvent) =>
+      //     !userCalendarEvents.some(
+      //       (existingEvent) => existingEvent.time === newEvent.time
+      //     )
+      // );
+      userCalendarEvents = [...newEvents];
       userCalendarEvents = userCalendarEvents?.filter((event) => {
         const eventTime = new Date(event.time).getTime();
         return eventTime >= Date.now();
@@ -154,3 +158,144 @@ function extractProperties(events: any[]) {
     };
   });
 }
+
+const registerWebhook = async (token: string) => {
+  console.log('token', token);
+  if (token !== '') {
+    const watchUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events/watch`;
+    const headers = new Headers({
+      Authorization: "Bearer " + token,
+      "Content-Type": "application/json",
+    });
+    const storageItem = await chrome.storage.sync.get(['channelId'])
+    const channel = storageItem.channelId
+    let channelId=''
+    // if(channel){
+    //   channelId = channel;
+    // }else{
+    //   channelId = crypto.randomUUID();
+    //   await chrome.storage.sync.set({ channelId: channelId }); 
+    // }
+    channelId = crypto.randomUUID();
+    // Generate a unique channel ID
+    const requestBody = {
+      id: channelId,
+      type: "web_hook",
+      address: "https://515b-2405-201-601f-60bc-d3bc-69b5-6113-5cbf.ngrok-free.app", // Your backend address
+      params: {
+        ttl: "604800", // Time-to-live in seconds (default is 7 days)
+      },
+    };
+
+    try {
+      const response = await fetch(watchUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody),
+      });
+      const  data = await response.json();
+      console.log('res',data)
+      // if (response.ok) {
+      //   console.log('Watch API call successful');
+      // } else {
+      //   console.error('Failed to call Watch API:', response.statusText);
+      // }
+    } catch (error) {
+      console.error('Error calling Watch API:', error);
+    }
+  }
+}
+
+const gcm = async(token:string)=>{
+  await registerGCM(token);
+}
+
+const registerGCM = (token:string) => {
+  return new Promise((resolve,reject)=>{
+    chrome.gcm.register(["782124510108"],async (registration_id) => {
+      console.log('registrationId',registration_id);
+
+      //send to backend
+      const url = 'https://515b-2405-201-601f-60bc-d3bc-69b5-6113-5cbf.ngrok-free.app/register'
+      const body = {
+        token,
+        registration_id
+      }
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body),
+        });
+        console.log(response)
+        const  data = await response.json();
+        console.log('res',data)
+        resolve(data)
+      } catch (error) {
+        //console.log(error)
+        //reject(error)
+      }
+    })
+  })
+}
+
+chrome.gcm.onMessage.addListener(async function(message) {
+  console.log('message',message)
+  fetchEvents();
+});
+
+
+interface FetchEventsOptions {
+  timeMin: string;
+  orderBy?: string;
+}
+
+const fetchCalendarEvents = async (options: FetchEventsOptions): Promise<any> => {
+  try {
+    const storageItem = await chrome.storage.sync.get([
+      "userToken",
+      "userCalendarEvents",
+    ]);
+    const token = storageItem.userToken;
+
+    if (!token) {
+      throw new Error("User token not found.");
+    }
+    const baseURL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+    const fetchURL = `${baseURL}?timeMin=${encodeURIComponent(options.timeMin)}` +
+                     (options.orderBy ? `&orderBy=${encodeURIComponent(options.orderBy)}` : '');
+
+    const headers = new Headers({
+      Authorization: "Bearer " + token,
+      "Content-Type": "application/json",
+    });
+
+    const config: RequestInit = {
+      method: "GET",
+      headers: Object.fromEntries(headers.entries()), // Extract headers as object
+    };
+
+    //const fetchURL = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(options.timeMin)}`;
+
+    const response = await fetch(fetchURL, config);
+    const data = await response.json();
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    throw error;
+  }
+};
+
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Check if the message action is to fetch events
+  console.log('refresh2')
+  if (message.action === "fetchEvents") {
+    console.log('refresh3')
+    // Call the function to fetch events
+    fetchEvents();
+  }
+});

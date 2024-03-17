@@ -82,7 +82,10 @@ export default function Popup(): JSX.Element {
 
     return `${days}d ${hours}h ${minutes}m`;
   }
-
+  const handleRefresh = () => {
+    console.log('refresh1')
+    chrome.runtime.sendMessage({ action: "fetchEvents" });
+  };
   return (
     <div className="p-2 w-[200px] bg-bgPrimary">
       {events.length ? (
@@ -104,6 +107,12 @@ export default function Popup(): JSX.Element {
           <h1 className="text-center text-persianOrange"> No Calendar Events</h1>
         </>
       )}
+      <button
+          className="bg-persianOrange text-white px-3 py-1 rounded-md my-2 mx-auto block"
+          onClick={handleRefresh}
+        >
+          Refresh
+        </button>
     </div>
   );
 }

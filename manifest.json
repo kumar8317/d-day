@@ -12,9 +12,7 @@
   },
   "permissions": [
     "storage",
-    "identity",
-    "notifications",
-    "gcm"
+    "identity"
   ],
   "icons": {
     "128": "Icon.png"

@@ -62,7 +62,19 @@ const fetchEvents = async (): Promise<userEvent[]> => {
 
       const newEvents = extractProperties(currentEvents);
       const allEvents = recurrenceEvents.concat(newEvents);
-      userCalendarEvents = [...allEvents];
+      const areEventsEqual = (event1: userEvent, event2: userEvent) => {
+        // Implement your logic here to determine if two events are equal
+        // For example, compare event start time or any other unique identifier
+        return event1.summary === event2.summary;
+      };
+      
+      // Filter out duplicate events
+      const allEventsWithoutDuplicates = allEvents.filter((event, index, self) => {
+        // Check if the current event is the first occurrence in the array or not equal to any previous event
+        return index === self.findIndex(otherEvent => areEventsEqual(event, otherEvent));
+      });
+
+      userCalendarEvents = [...allEventsWithoutDuplicates];
       userCalendarEvents = userCalendarEvents?.filter((event) => {
         const eventTime = new Date(event.time).getTime();
         return eventTime >= Date.now();

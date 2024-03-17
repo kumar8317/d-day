@@ -29,8 +29,7 @@
     {
       "resources": [
         "contentStyle.css",
-        "icon-128.png",
-        "icon-32.png"
+        "Icon.png"
       ],
       "matches": []
     }

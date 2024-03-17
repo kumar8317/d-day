@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "D-Day",
-  "description": "A counter for creating countdown events and syncs with google calendar events",
+  "description": "A countdown to your calendar events",
   "background": {
     "service_worker": "src/pages/background/index.ts",
     "type": "module"

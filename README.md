@@ -1,6 +1,6 @@
 # D-Day
 
-A Chrome extension that syncs your google calendar events and displays a countdown timer of each event.
+A countdown to your calendar events. This chrome extension lets you track days/hours/minutes of your calendar events.
 
 The nearest event time would always be visible in your chrome toolbar.
 

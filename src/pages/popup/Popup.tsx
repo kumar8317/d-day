@@ -12,7 +12,6 @@ export default function Popup(): JSX.Element {
     
     const storageItem = await chrome.storage.sync.get(["userCalendarEvents"]);
     const userCalendarEvents = storageItem.userCalendarEvents;
-    const currentTime = new Date().toISOString(); 
     userCalendarEvents.sort((a: Event, b: Event) => {
       const timeA = new Date(a.time).getTime();
       const timeB = new Date(b.time).getTime();

@@ -12,7 +12,8 @@
   },
   "permissions": [
     "storage",
-    "identity"
+    "identity",
+    "alarms"
   ],
   "icons": {
     "128": "Icon.png"

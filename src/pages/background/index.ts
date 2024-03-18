@@ -13,14 +13,49 @@ chrome.runtime.onStartup.addListener(async function () {
 const init = async () => {
   await chrome.action.setBadgeBackgroundColor({ color: "#294fa7" });
   const token = await chrome.identity.getAuthToken({ interactive: true });
-  //await registerWebhook(token.token? token.token:'')
-  //await gcm(token.token? token.token:'');
   await chrome.storage.sync.set({ userToken: token.token });
   const userEvents = await fetchEvents();
   updateBadge(userEvents)();
-  updateBadgePeriodically(userEvents);
-};
 
+
+  //User chrome.alarms API to schedule badge update instead of setInterval
+  await checkAlarmState();
+};
+chrome.alarms.onAlarm.addListener(async(alarm)=>{
+  if(alarm.name === 'updateBadeAlarm'){
+    const storageItem = await chrome.storage.sync.get([
+      "userCalendarEvents",
+    ]);
+    let userCalendarEvents: userEvent[] = storageItem.userCalendarEvents || [];
+
+    const updatedEvents = userCalendarEvents?.filter((event) => {
+      const eventTime = new Date(event.time).getTime();
+      return eventTime >= Date.now();
+    });
+    if (updatedEvents.length !== userCalendarEvents.length) {
+      await chrome.storage.sync.set({ userCalendarEvents: updatedEvents });
+      chrome.runtime.sendMessage({ action: "updateDisplayEvents" });
+      userCalendarEvents = updatedEvents;
+    }
+    await updateBadge(userCalendarEvents)()
+  }
+})
+const STORAGE_KEY = "alarm-enabled";
+
+async function checkAlarmState() {
+  const { alarmEnabled } = await chrome.storage.sync.get(STORAGE_KEY);
+  if (alarmEnabled) {
+    const alarm = await chrome.alarms.get("updateBadgeAlarm");
+
+    if (!alarm) {
+      await chrome.alarms.create('updateBadeAlarm',{ periodInMinutes: 1 });
+      await chrome.storage.sync.set({STORAGE_KEY:'alarmEnabled'});
+    }
+  }else {
+    await chrome.alarms.create('updateBadeAlarm',{ periodInMinutes: 1 });
+    await chrome.storage.sync.set({STORAGE_KEY:'alarmEnabled'});
+  }
+}
 const fetchEvents = async (): Promise<userEvent[]> => {
   try {
     const storageItem = await chrome.storage.sync.get([
@@ -93,15 +128,7 @@ const fetchEvents = async (): Promise<userEvent[]> => {
 
 const updateBadge = (userEvents: userEvent[]) => {
   return async () => {
-    const updatedEvents = userEvents?.filter((event) => {
-      const eventTime = new Date(event.time).getTime();
-      return eventTime >= Date.now();
-    });
-    if (updatedEvents.length !== userEvents.length) {
-      await chrome.storage.sync.set({ userCalendarEvents: updatedEvents });
-      chrome.runtime.sendMessage({ action: "updateDisplayEvents" });
-      userEvents = updatedEvents;
-    }
+    
     let minDays = Infinity;
     let minHours = Infinity;
     let minMinutes = Infinity;
@@ -164,9 +191,9 @@ const updateBadge = (userEvents: userEvent[]) => {
   };
 };
 
-const updateBadgePeriodically = async (userEvents: userEvent[]) => {
-  setInterval(updateBadge(userEvents), 60000);
-};
+// const updateBadgePeriodically = async (userEvents: userEvent[]) => {
+//   setInterval(updateBadge(userEvents), 60000);
+// };
 
 function extractProperties(events: any[]) {
   return events.map((event) => {

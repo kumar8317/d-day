@@ -17,15 +17,12 @@ const init = async () => {
   const userEvents = await fetchEvents();
   updateBadge(userEvents)();
 
-
   //User chrome.alarms API to schedule badge update instead of setInterval
   await checkAlarmState();
 };
-chrome.alarms.onAlarm.addListener(async(alarm)=>{
-  if(alarm.name === 'updateBadeAlarm'){
-    const storageItem = await chrome.storage.sync.get([
-      "userCalendarEvents",
-    ]);
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === "updateBadeAlarm") {
+    const storageItem = await chrome.storage.sync.get(["userCalendarEvents"]);
     let userCalendarEvents: userEvent[] = storageItem.userCalendarEvents || [];
 
     const updatedEvents = userCalendarEvents?.filter((event) => {
@@ -37,9 +34,9 @@ chrome.alarms.onAlarm.addListener(async(alarm)=>{
       chrome.runtime.sendMessage({ action: "updateDisplayEvents" });
       userCalendarEvents = updatedEvents;
     }
-    await updateBadge(userCalendarEvents)()
+    await updateBadge(userCalendarEvents)();
   }
-})
+});
 const STORAGE_KEY = "alarm-enabled";
 
 async function checkAlarmState() {
@@ -48,12 +45,12 @@ async function checkAlarmState() {
     const alarm = await chrome.alarms.get("updateBadgeAlarm");
 
     if (!alarm) {
-      await chrome.alarms.create('updateBadeAlarm',{ periodInMinutes: 1 });
-      await chrome.storage.sync.set({STORAGE_KEY:'alarmEnabled'});
+      await chrome.alarms.create("updateBadeAlarm", { periodInMinutes: 1 });
+      await chrome.storage.sync.set({ STORAGE_KEY: "alarmEnabled" });
     }
-  }else {
-    await chrome.alarms.create('updateBadeAlarm',{ periodInMinutes: 1 });
-    await chrome.storage.sync.set({STORAGE_KEY:'alarmEnabled'});
+  } else {
+    await chrome.alarms.create("updateBadeAlarm", { periodInMinutes: 1 });
+    await chrome.storage.sync.set({ STORAGE_KEY: "alarmEnabled" });
   }
 }
 const fetchEvents = async (): Promise<userEvent[]> => {
@@ -102,12 +99,17 @@ const fetchEvents = async (): Promise<userEvent[]> => {
         // For example, compare event start time or any other unique identifier
         return event1.summary === event2.summary;
       };
-      
+
       // Filter out duplicate events
-      const allEventsWithoutDuplicates = allEvents?.filter((event, index, self) => {
-        // Check if the current event is the first occurrence in the array or not equal to any previous event
-        return index === self.findIndex(otherEvent => areEventsEqual(event, otherEvent));
-      });
+      const allEventsWithoutDuplicates = allEvents?.filter(
+        (event, index, self) => {
+          // Check if the current event is the first occurrence in the array or not equal to any previous event
+          return (
+            index ===
+            self.findIndex((otherEvent) => areEventsEqual(event, otherEvent))
+          );
+        }
+      );
 
       userCalendarEvents = [...allEventsWithoutDuplicates];
       userCalendarEvents = userCalendarEvents?.filter((event) => {
@@ -128,14 +130,11 @@ const fetchEvents = async (): Promise<userEvent[]> => {
 
 const updateBadge = (userEvents: userEvent[]) => {
   return async () => {
-    
     let minDays = Infinity;
     let minHours = Infinity;
     let minMinutes = Infinity;
 
     if (userEvents.length) {
-      //remove this event
-
       userEvents.forEach((event) => {
         const startDate = new Date(event.time).getTime();
         const diff = startDate - Date.now();
@@ -165,7 +164,6 @@ const updateBadge = (userEvents: userEvent[]) => {
     if (minDays > 0) {
       badgeText = minDays.toString() + "d";
     } else if (minHours > 0) {
-
       badgeText = minHours.toString() + "h";
     } else {
       badgeText = minMinutes.toString() + "m";
@@ -173,27 +171,9 @@ const updateBadge = (userEvents: userEvent[]) => {
     if (badgeText === "Infinityd") {
       badgeText = "";
     }
-    // if (minDays <= 0 && minHours <= 0 && minMinutes <= 0) {
-    //   const updatedEvents = userEvents?.filter((event) => {
-    //     const eventTime = new Date(event.time).getTime();
-    //     return eventTime >= Date.now();
-    //   });
-    //   console.log('updatedEvens.length',updatedEvents.length)
-    //   console.log('userEvents.length',userEvents.length)
-    //   if (updatedEvents.length !== userEvents.length) {
-    //     await chrome.storage.sync.set({ userCalendarEvents: updatedEvents });
-    //     console.log('senbdMesasge')
-    //     chrome.runtime.sendMessage({ action: "updateDisplayEvents" });
-    //     userEvents = updatedEvents;
-    //   }
-    // }
     await chrome.action.setBadgeText({ text: badgeText });
   };
 };
-
-// const updateBadgePeriodically = async (userEvents: userEvent[]) => {
-//   setInterval(updateBadge(userEvents), 60000);
-// };
 
 function extractProperties(events: any[]) {
   return events.map((event) => {
@@ -203,139 +183,6 @@ function extractProperties(events: any[]) {
     };
   });
 }
-
-// const registerWebhook = async (token: string) => {
-//   if (token !== "") {
-//     const watchUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events/watch`;
-//     const headers = new Headers({
-//       Authorization: "Bearer " + token,
-//       "Content-Type": "application/json",
-//     });
-//     const storageItem = await chrome.storage.sync.get(["channelId"]);
-//     const channel = storageItem.channelId;
-//     let channelId = "";
-//     // if(channel){
-//     //   channelId = channel;
-//     // }else{
-//     //   channelId = crypto.randomUUID();
-//     //   await chrome.storage.sync.set({ channelId: channelId });
-//     // }
-//     channelId = crypto.randomUUID();
-//     // Generate a unique channel ID
-//     const requestBody = {
-//       id: channelId,
-//       type: "web_hook",
-//       address:
-//         "https://515b-2405-201-601f-60bc-d3bc-69b5-6113-5cbf.ngrok-free.app", // Your backend address
-//       params: {
-//         ttl: "604800", // Time-to-live in seconds (default is 7 days)
-//       },
-//     };
-
-//     try {
-//       const response = await fetch(watchUrl, {
-//         method: "POST",
-//         headers,
-//         body: JSON.stringify(requestBody),
-//       });
-//       const data = await response.json();
-//       // if (response.ok) {
-//       //   console.log('Watch API call successful');
-//       // } else {
-//       //   console.error('Failed to call Watch API:', response.statusText);
-//       // }
-//     } catch (error) {
-//       console.error("Error calling Watch API:", error);
-//     }
-//   }
-// };
-
-// const gcm = async (token: string) => {
-//   await registerGCM(token);
-// };
-
-// const registerGCM = (token: string) => {
-//   return new Promise((resolve, reject) => {
-//     chrome.gcm.register(, async (registration_id) => {
-//       console.log("registrationId", registration_id);
-
-//       //send to backend
-//       const url =
-//         "https://515b-2405-201-601f-60bc-d3bc-69b5-6113-5cbf.ngrok-free.app/register";
-//       const body = {
-//         token,
-//         registration_id,
-//       };
-//       try {
-//         const response = await fetch(url, {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//           },
-//           body: JSON.stringify(body),
-//         });
-//         const data = await response.json();
-//         resolve(data);
-//       } catch (error) {
-//         //console.log(error)
-//         //reject(error)
-//       }
-//     });
-//   });
-// };
-
-// chrome.gcm.onMessage.addListener(async function (message) {
-//   console.log("message", message);
-//   fetchEvents();
-// });
-
-// interface FetchEventsOptions {
-//   timeMin: string;
-//   orderBy?: string;
-// }
-
-// const fetchCalendarEvents = async (
-//   options: FetchEventsOptions
-// ): Promise<any> => {
-//   try {
-//     const storageItem = await chrome.storage.sync.get([
-//       "userToken",
-//       "userCalendarEvents",
-//     ]);
-//     const token = storageItem.userToken;
-
-//     if (!token) {
-//       throw new Error("User token not found.");
-//     }
-//     const baseURL =
-//       "https://www.googleapis.com/calendar/v3/calendars/primary/events";
-//     const fetchURL =
-//       `${baseURL}?timeMin=${encodeURIComponent(options.timeMin)}` +
-//       (options.orderBy
-//         ? `&orderBy=${encodeURIComponent(options.orderBy)}`
-//         : "");
-
-//     const headers = new Headers({
-//       Authorization: "Bearer " + token,
-//       "Content-Type": "application/json",
-//     });
-
-//     const config: RequestInit = {
-//       method: "GET",
-//       headers: Object.fromEntries(headers.entries()), // Extract headers as object
-//     };
-
-//     //const fetchURL = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(options.timeMin)}`;
-
-//     const response = await fetch(fetchURL, config);
-//     const data = await response.json();
-
-//     return data;
-//   } catch (error) {
-//     console.error("Error fetching events:", error);
-//     throw error;
-//   }
-// };
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Check if the message action is to fetch events

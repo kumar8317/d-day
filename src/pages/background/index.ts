@@ -81,6 +81,7 @@ const fetchEvents = async (): Promise<userEvent[]> => {
       });
       await chrome.storage.sync.set({ userCalendarEvents: userCalendarEvents });
       updateBadge(userCalendarEvents)();
+      //chrome.runtime.sendMessage({ action: "displayEvents" });
     }
 
     return userCalendarEvents;
@@ -92,6 +93,15 @@ const fetchEvents = async (): Promise<userEvent[]> => {
 
 const updateBadge = (userEvents: userEvent[]) => {
   return async () => {
+    const updatedEvents = userEvents?.filter((event) => {
+      const eventTime = new Date(event.time).getTime();
+      return eventTime >= Date.now();
+    });
+    if (updatedEvents.length !== userEvents.length) {
+      await chrome.storage.sync.set({ userCalendarEvents: updatedEvents });
+      chrome.runtime.sendMessage({ action: "updateDisplayEvents" });
+      userEvents = updatedEvents;
+    }
     let minDays = Infinity;
     let minHours = Infinity;
     let minMinutes = Infinity;
@@ -128,6 +138,7 @@ const updateBadge = (userEvents: userEvent[]) => {
     if (minDays > 0) {
       badgeText = minDays.toString() + "d";
     } else if (minHours > 0) {
+
       badgeText = minHours.toString() + "h";
     } else {
       badgeText = minMinutes.toString() + "m";
@@ -135,19 +146,21 @@ const updateBadge = (userEvents: userEvent[]) => {
     if (badgeText === "Infinityd") {
       badgeText = "";
     }
-
-    if (minDays <= 0 && minHours <= 0 && minMinutes <= 0) {
-      const updatedEvents = userEvents?.filter((event) => {
-        const eventTime = new Date(event.time).getTime();
-        return eventTime >= Date.now();
-      });
-      if (updatedEvents.length !== userEvents.length) {
-        await chrome.storage.sync.set({ userCalendarEvents: updatedEvents });
-        userEvents = updatedEvents;
-      }
-    }
-
-    chrome.action.setBadgeText({ text: badgeText });
+    // if (minDays <= 0 && minHours <= 0 && minMinutes <= 0) {
+    //   const updatedEvents = userEvents?.filter((event) => {
+    //     const eventTime = new Date(event.time).getTime();
+    //     return eventTime >= Date.now();
+    //   });
+    //   console.log('updatedEvens.length',updatedEvents.length)
+    //   console.log('userEvents.length',userEvents.length)
+    //   if (updatedEvents.length !== userEvents.length) {
+    //     await chrome.storage.sync.set({ userCalendarEvents: updatedEvents });
+    //     console.log('senbdMesasge')
+    //     chrome.runtime.sendMessage({ action: "updateDisplayEvents" });
+    //     userEvents = updatedEvents;
+    //   }
+    // }
+    await chrome.action.setBadgeText({ text: badgeText });
   };
 };
 
@@ -312,7 +325,6 @@ const fetchRecurrenceEvents = (items: any): userEvent[] => {
       // Check if the event has recurrence rule
       if (event.recurrence && event.recurrence.length > 0) {
         const recurrenceRule = event.recurrence[0];
-        console.log("rrrr", recurrenceRule);
         const untilMatch = recurrenceRule.match(/UNTIL=([0-9TZ]+)/); // Extract UNTIL date
         if (untilMatch) {
           const untilDateString = untilMatch[1];

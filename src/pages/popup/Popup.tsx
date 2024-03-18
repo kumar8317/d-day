@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 interface Event {
   time: string;
   summary: string;
+  hangoutLink?: string;
 }
 
 export default function Popup(): JSX.Element {
@@ -40,7 +41,7 @@ export default function Popup(): JSX.Element {
     };
   });
 
-  function calculateCountdown(startDate: Date) {
+  const calculateCountdown = (startDate: Date) => {
     const now = new Date();
     const diff = startDate.getTime() - now.getTime();
 
@@ -55,6 +56,18 @@ export default function Popup(): JSX.Element {
     chrome.runtime.sendMessage({ action: "fetchEvents" });
     setLoading(false);
   };
+  const checkImminentEvent = (startDate: Date) => {
+    const now = new Date();
+    const diff = startDate.getTime() - now.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    return minutes <= 5;
+  }
+
+  const hanldeJoinNow = (event: Event) => {
+    if (event.hangoutLink) {
+      window.open(event.hangoutLink);
+    }
+  }
   return (
     <div className="p-2 w-[200px] bg-bgPrimary">
       {events.length ? (
@@ -66,10 +79,19 @@ export default function Popup(): JSX.Element {
           {events.map((event, index) => {
             const startDate = new Date(event.time);
             const countdown = calculateCountdown(startDate);
+            const isEventImminent = checkImminentEvent(startDate);
             return (
-              <div key={index} className="mb-2.5 p-[5px] rounded-[5px]">
-                <div className="text-aquaMarine">{event.summary}</div>
-                <div className="text-persianOrange text-lg">{countdown}</div>
+              <div key={index} className="mb-2.5 p-[5px] rounded-[5px] flex items-center">
+                <div>
+                  <div className="text-aquaMarine">{event.summary}</div>
+                  <div className="text-persianOrange text-lg">{countdown}</div>
+                </div>
+               
+                {isEventImminent && (
+                  <button className="hover:text-red-500 text-aquaMarine px-2" onClick={()=>hanldeJoinNow(event)}>
+                    <span className="">Join Now</span>
+                  </button>
+                )}
               </div>
             );
           })}
@@ -83,7 +105,7 @@ export default function Popup(): JSX.Element {
         </>
       )}
       <button
-        className="bg-persianOrange text-white px-3 py-1 rounded-md my-2 mx-auto block"
+        className="bg-persianOrange text-bgPrimary px-3 py-1 rounded-md my-2 mx-auto block"
         onClick={handleRefresh}
       >
         {loading ? "Refreshing..." : "Refresh"}

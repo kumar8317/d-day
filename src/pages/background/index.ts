@@ -2,6 +2,7 @@ import { datetime, RRule, RRuleSet, rrulestr } from "rrule";
 interface userEvent {
   time: string;
   summary: string;
+  hangoutLink?: string;
 }
 chrome.runtime.onInstalled.addListener(async function () {
   await chrome.storage.sync.set({ userCalendarEvents: [] });
@@ -91,7 +92,7 @@ const fetchEvents = async (): Promise<userEvent[]> => {
         (item: { start: { dateTime: number } }) =>
           String(item.start.dateTime) >= currentTime
       );
-
+      console.log('events',currentEvents)
       const newEvents = extractProperties(currentEvents);
       const allEvents = recurrenceEvents.concat(newEvents);
       const areEventsEqual = (event1: userEvent, event2: userEvent) => {
@@ -116,6 +117,7 @@ const fetchEvents = async (): Promise<userEvent[]> => {
         const eventTime = new Date(event.time).getTime();
         return eventTime >= Date.now();
       });
+      console.log('userCalendarEvents:',userCalendarEvents)
       await chrome.storage.sync.set({ userCalendarEvents: userCalendarEvents });
       updateBadge(userCalendarEvents)();
       //chrome.runtime.sendMessage({ action: "displayEvents" });
@@ -180,6 +182,7 @@ function extractProperties(events: any[]) {
     return {
       time: event.start.dateTime,
       summary: event.summary,
+      hangoutLink: event.hangoutLink
     };
   });
 }
@@ -245,6 +248,7 @@ const fetchRecurrenceEvents = (items: any): userEvent[] => {
       return {
         summary: event.summary,
         time,
+        hangoutLink: event.hangoutLink
       };
     }
     return null; // Return null if recurrence array is empty

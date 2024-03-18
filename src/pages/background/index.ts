@@ -216,7 +216,7 @@ function extractProperties(events: any[]) {
 
 // const registerGCM = (token: string) => {
 //   return new Promise((resolve, reject) => {
-//     chrome.gcm.register(["782124510108"], async (registration_id) => {
+//     chrome.gcm.register(, async (registration_id) => {
 //       console.log("registrationId", registration_id);
 
 //       //send to backend

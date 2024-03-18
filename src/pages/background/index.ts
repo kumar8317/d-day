@@ -49,13 +49,13 @@ const fetchEvents = async (): Promise<userEvent[]> => {
       const response = await fetch(fetchURL, queryParams);
 
       const data = await response.json();
-      const items = data?.items.filter(
+      const items = data?.items?.filter(
         (item: { status: string; start: { dateTime: any } }) =>
           item.status !== "cancelled" && item.start && item.start.dateTime
       );
 
       const recurrenceEvents = fetchRecurrenceEvents(items);
-      const currentEvents = items.filter(
+      const currentEvents = items?.filter(
         (item: { start: { dateTime: number } }) =>
           String(item.start.dateTime) >= currentTime
       );
@@ -69,7 +69,7 @@ const fetchEvents = async (): Promise<userEvent[]> => {
       };
       
       // Filter out duplicate events
-      const allEventsWithoutDuplicates = allEvents.filter((event, index, self) => {
+      const allEventsWithoutDuplicates = allEvents?.filter((event, index, self) => {
         // Check if the current event is the first occurrence in the array or not equal to any previous event
         return index === self.findIndex(otherEvent => areEventsEqual(event, otherEvent));
       });
@@ -137,7 +137,7 @@ const updateBadge = (userEvents: userEvent[]) => {
     }
 
     if (minDays <= 0 && minHours <= 0 && minMinutes <= 0) {
-      const updatedEvents = userEvents.filter((event) => {
+      const updatedEvents = userEvents?.filter((event) => {
         const eventTime = new Date(event.time).getTime();
         return eventTime >= Date.now();
       });
@@ -307,7 +307,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 const fetchRecurrenceEvents = (items: any): userEvent[] => {
   const currentTime = new Date();
-  const filteredEvents = items.filter(
+  const filteredEvents = items?.filter(
     (event: { recurrence: string | any[]; start: { dateTime: string } }) => {
       // Check if the event has recurrence rule
       if (event.recurrence && event.recurrence.length > 0) {
@@ -364,5 +364,5 @@ const fetchRecurrenceEvents = (items: any): userEvent[] => {
     return null; // Return null if recurrence array is empty
   });
 
-  return recurrenceEvents.filter((event: any) => event !== null);
+  return recurrenceEvents?.filter((event: any) => event !== null);
 };

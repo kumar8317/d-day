@@ -69,7 +69,7 @@ export default function Popup(): JSX.Element {
     }
   }
   return (
-    <div className="p-2 w-[200px] bg-bgPrimary">
+    <div className="p-2 w-[200px] bg-bgPrimary rounded:md">
       {events.length ? (
         <div className="">
           <h1 className="text-center text-persianOrange text-xl">
@@ -88,7 +88,7 @@ export default function Popup(): JSX.Element {
                 </div>
                
                 {isEventImminent && (
-                  <button className="hover:text-red-500 text-aquaMarine px-2" onClick={()=>hanldeJoinNow(event)}>
+                  <button className="bg-aquaMarine text-bgPrimary px-3 py-1 rounded-md my-2 mx-auto block" onClick={()=>hanldeJoinNow(event)}>
                     <span className="">Join Now</span>
                   </button>
                 )}

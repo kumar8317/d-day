@@ -86,7 +86,7 @@ const fetchEvents = async (): Promise<userEvent[]> => {
         (item: { status: string; start: { dateTime: any } }) =>
           item.status !== "cancelled" && item.start && item.start.dateTime
       );
-
+        
       const recurrenceEvents = fetchRecurrenceEvents(items);
       const currentEvents = items?.filter(
         (item: { start: { dateTime: number } }) =>
@@ -182,7 +182,7 @@ function extractProperties(events: any[]) {
     return {
       time: event.start.dateTime,
       summary: event.summary,
-      hangoutLink: event.hangoutLink
+      hangoutLink: event.hangoutLink? event.hangoutLink : event.location? event.location: null
     };
   });
 }
@@ -248,7 +248,7 @@ const fetchRecurrenceEvents = (items: any): userEvent[] => {
       return {
         summary: event.summary,
         time,
-        hangoutLink: event.hangoutLink
+        hangoutLink: event.hangoutLink? event.hangoutLink : event.location? event.location: null
       };
     }
     return null; // Return null if recurrence array is empty

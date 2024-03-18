@@ -88,8 +88,8 @@ export default function Popup(): JSX.Element {
                 </div>
                
                 {isEventImminent && (
-                  <button className="bg-aquaMarine text-bgPrimary px-3 py-1 rounded-md my-2 mx-auto block" onClick={()=>hanldeJoinNow(event)}>
-                    <span className="">Join Now</span>
+                  <button className="bg-aquaMarine text-bgPrimary px-4 py-1 rounded-md my-2 mx-auto block" onClick={()=>hanldeJoinNow(event)}>
+                    <span className="">Join</span>
                   </button>
                 )}
               </div>

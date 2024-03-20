@@ -13,10 +13,14 @@ chrome.runtime.onStartup.addListener(async function () {
   await init();
 });
 const init = async () => {
+  chrome.identity.clearAllCachedAuthTokens(()=>{
+    console.log('renoive')
+  });
   await chrome.action.setBadgeBackgroundColor({ color: "#294fa7" });
   const token = await chrome.identity.getAuthToken({ interactive: true });
+  console.log(token)
   await chrome.storage.sync.set({ userToken: token.token });
-  const userEvents = await fetchEvents();
+  const userEvents = await fetchEvents(token.token);
   updateBadge(userEvents)();
 
   //User chrome.alarms API to schedule badge update instead of setInterval
@@ -55,13 +59,14 @@ async function checkAlarmState() {
     await chrome.storage.sync.set({ STORAGE_KEY: "alarmEnabled" });
   }
 }
-const fetchEvents = async (): Promise<userEvent[]> => {
+const fetchEvents = async (token:string | undefined): Promise<userEvent[]> => {
   try {
     const storageItem = await chrome.storage.sync.get([
       "userToken",
       "userCalendarEvents",
     ]);
-    const token = storageItem.userToken;
+    // const token = storageItem.userToken;
+    // const 
     let userCalendarEvents: userEvent[] = storageItem.userCalendarEvents || [];
     if (token != "") {
       const headers = new Headers({
@@ -179,7 +184,7 @@ const updateBadge = (userEvents: userEvent[]) => {
 };
 
 function extractProperties(events: any[]) {
-  return events.map((event) => {
+  return events?.map((event) => {
     return {
       time: event.start.dateTime,
       summary: event.summary,
@@ -193,7 +198,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Check if the message action is to fetch events
   if (message.action === "fetchEvents") {
     // Call the function to fetch events
-    fetchEvents();
+    //fetchEvents();
   }
 });
 
@@ -236,7 +241,7 @@ const fetchRecurrenceEvents = (items: any): userEvent[] => {
     }
   );
 
-  const recurrenceEvents = filteredEvents.map((event: any) => {
+  const recurrenceEvents = filteredEvents?.map((event: any) => {
     const { recurrence, start } = event;
     if (recurrence && recurrence.length > 0) {
       const r: string = recurrence[0];

@@ -4,6 +4,7 @@ interface Event {
   time: string;
   summary: string;
   hangoutLink?: string;
+  htmlLink: string;
 }
 
 export default function Popup(): JSX.Element {
@@ -83,7 +84,9 @@ export default function Popup(): JSX.Element {
             return (
               <div key={index} className="mb-2.5 p-[5px] rounded-[5px] flex items-center">
                 <div>
-                  <div className="text-aquaMarine">{event.summary}</div>
+                  <a href={event.htmlLink} onClick={()=>window.open(event.htmlLink)} className="">
+                  <div className="text-aquaMarine hover:underline" >{event.summary}</div>
+                  </a>
                   <div className="text-persianOrange text-lg">{countdown}</div>
                 </div>
                

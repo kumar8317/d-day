@@ -3,6 +3,7 @@ interface userEvent {
   time: string;
   summary: string;
   hangoutLink?: string;
+  htmlLink: string;
 }
 chrome.runtime.onInstalled.addListener(async function () {
   await chrome.storage.sync.set({ userCalendarEvents: [] });
@@ -182,7 +183,8 @@ function extractProperties(events: any[]) {
     return {
       time: event.start.dateTime,
       summary: event.summary,
-      hangoutLink: event.hangoutLink? event.hangoutLink : event.location? event.location: null
+      hangoutLink: event.hangoutLink? event.hangoutLink : event.location? event.location: null,
+      htmlLink: event.htmlLink
     };
   });
 }
@@ -248,7 +250,8 @@ const fetchRecurrenceEvents = (items: any): userEvent[] => {
       return {
         summary: event.summary,
         time,
-        hangoutLink: event.hangoutLink? event.hangoutLink : event.location? event.location: null
+        hangoutLink: event.hangoutLink? event.hangoutLink : event.location? event.location: null,
+        htmlLink: event.htmlLink
       };
     }
     return null; // Return null if recurrence array is empty

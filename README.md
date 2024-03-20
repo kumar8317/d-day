@@ -6,9 +6,11 @@ The nearest event time would always be visible in your chrome toolbar.
 
 Helps you track date-time until your important calendar event even when you are mindlessly browsing
 
-## Installing and Running In Developer Mode
+## Install
 
-### Procedures:
+[![Chrome Store](./public/chromeStore.png)](https://chromewebstore.google.com/detail/d-day/opomflbocnfigfddnpbebnjhlldpgmhc)
+
+## Developement
 
 1. Clone this repository
 2. Run `yarn install` to install the dependencies

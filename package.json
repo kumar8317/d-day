@@ -1,6 +1,6 @@
 {
   "name": "d-day",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A chrome extension counter for creating countdown events and syncs with google calendar events",
   "license": "MIT",
   "scripts": {
